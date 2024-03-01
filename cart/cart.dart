@@ -25,145 +25,151 @@ class Stock {
   }
 }
 
-List<Stock> stock = [];
-
-void getItems() {
-  stdout.write('Enter an item or type "done" to finish adding items: ');
-  String itemName = stdin.readLineSync()!;
-  if (itemName.toLowerCase() == 'done') {
-    print('Items entered:');
-    displayItems();
-    return;
-  }
-
-  stdout.write('Enter the price for $itemName: ');
-  double itemPrice = double.parse(stdin.readLineSync()!);
-
-  stdout.write('Enter the quantity for $itemName: ');
-  int itemQuantity = int.parse(stdin.readLineSync()!);
-
-  addItem(itemName, itemPrice, itemQuantity);
-}
-
-void addItem(String itemName, double itemPrice, int itemQuantity, [int? i]) {
-  if (i != null && i >= 0 && i <= stock.length) {
-    stock.insert(i, Stock(itemName, itemPrice, itemQuantity));
-  } else {
-    stock.add(Stock(itemName, itemPrice, itemQuantity));
-  }
-  print('Item "$itemName" added successfully.');
-  getItems();
-}
-
-void displayItems() {
+void displayStock(List<Stock> stock) {
   print("Stock -");
   for (int i = 0; i < stock.length; i++) {
     print('${i + 1} - ${stock[i]}');
   }
-  executeAction();
 }
 
-void deleteItem(int i) {
-  try {
-    if (i < 0 || i >= stock.length) {
-      throw Exception("Invalid id");
-    }
-    Stock deletedItem = stock.removeAt(i);
-    print("Item deleted successfully: ${deletedItem.name}");
-    executeAction();
-  } catch (error) {
-    print(error.toString());
-    executeAction();
-  }
-}
-
-void deleteAllItems() {
-  stock.clear();
-  print("All items deleted.");
-  executeAction();
-}
-
-void updateItem(int i, String newItem, double newPrice, int newQuantity) {
-  try {
-    if (i < 0 || i >= stock.length) {
-      throw Exception("Invalid id");
-    }
-    stock[i].name = newItem;
-    stock[i].price = newPrice;
-    stock[i].quantity = newQuantity;
-    print('Item at index ${i + 1} updated to "$newItem"');
-    executeAction();
-  } catch (error) {
-    print(error.toString());
-    executeAction();
-  }
-}
-
-void saveToFile() {
-  File file = File('stock.json');
-  List<Map<String, dynamic>> jsonList = stock.map((item) => item.toJson()).toList();
-  String jsonString = json.encode(jsonList);
-  file.writeAsStringSync(jsonString);
-  print('Stock saved to file.');
-}
-
-void loadFromFile() {
-  File file = File('stock.json');
+List<Stock> loadStockFromFile(String filename) {
+  File file = File(filename);
   if (!file.existsSync()) {
-    print('No stock data found.');
-    return;
+    print('No data found.');
+    return [];
   }
 
   String jsonString = file.readAsStringSync();
   List<dynamic> jsonList = json.decode(jsonString);
-  stock = jsonList.map((itemJson) => Stock.fromJson(itemJson)).toList();
-  print('Stock loaded from file.');
+  return jsonList.map((itemJson) => Stock.fromJson(itemJson)).toList();
 }
 
-void executeAction() {
-  stdout.write('Enter action (display/delete/deleteAll/update/add/done/save): ');
-  String action = stdin.readLineSync()!;
-  switch (action.toLowerCase()) {
-    case 'display':
-      displayItems();
-      break;
-    case 'delete':
-      stdout.write('Enter the id of the item to delete: ');
-      int i = int.parse(stdin.readLineSync()!) - 1;
-      deleteItem(i);
-      break;
-    case 'deleteall':
-      deleteAllItems();
-      break;
-    case 'update':
-      stdout.write('Enter the id of the item to update: ');
-      int iToUpdate = int.parse(stdin.readLineSync()!) - 1;
-      stdout.write('Enter the new item name: ');
-      String newItemName = stdin.readLineSync()!;
-      stdout.write('Enter the new price: ');
-      double newPrice = double.parse(stdin.readLineSync()!);
-      stdout.write('Enter the new quantity: ');
-      int newQuantity = int.parse(stdin.readLineSync()!);
-      updateItem(iToUpdate, newItemName, newPrice, newQuantity);
-      break;
-    case 'add':
-      getItems();
-      break;
-    case 'save':
-      saveToFile();
-      executeAction();
-      break;
-    case 'done':
-      print('Exiting... ツ');
-      break;
-    default:
-      print('Invalid action.');
-      executeAction();
-      break;
-  }
+void saveStockToFile(List<Stock> stock, String filename) {
+  File file = File(filename);
+  List<Map<String, dynamic>> jsonList = stock.map((item) => item.toJson()).toList();
+  String jsonString = json.encode(jsonList);
+  file.writeAsStringSync(jsonString);
+  print('Data saved to $filename.');
 }
 
 void main() {
-  loadFromFile();
-  executeAction();
+  List<Stock> stock = loadStockFromFile('stock.json');
+  List<Stock> cart = loadStockFromFile('cart.json');
+  
+  while (true) {
+    print('\nChoose an action:');
+    print('1. Add item to cart');
+    print('2. Delete item from cart');
+    print('3. Update quantity of cart item');
+    print('4. Delete all items in cart');
+    print('5. Print invoice');
+    print('6. Exit');
+    
+    stdout.write('Enter your choice: ');
+    String choice = stdin.readLineSync()!;
+    
+    switch (choice) {
+      case '1':
+        stdout.write('Enter the item name: ');
+        String itemName = stdin.readLineSync()!;
+        
+        Stock? foundStock;
+        for (var item in stock) {
+          if (item.name == itemName) {
+            foundStock = item;
+            break;
+          }
+        }
+        
+        if (foundStock == null) {
+          print('Item not found in stock.');
+          continue;
+        }
+        
+        stdout.write('Enter the quantity: ');
+        int quantityToAdd = int.parse(stdin.readLineSync()!);
+        
+        if (foundStock.quantity < quantityToAdd) {
+          print('Insufficient quantity in stock.');
+          continue;
+        }
+        
+        foundStock.quantity -= quantityToAdd;
+        
+        Stock cartItem = Stock(itemName, foundStock.price, quantityToAdd);
+        cart.add(cartItem);
+        
+        print('Item added to cart.');
+        break;
+        
+      case '2':
+        displayStock(cart);
+        stdout.write('Enter the item index to delete: ');
+        int indexToDelete = int.parse(stdin.readLineSync()!) - 1;
+        
+        if (indexToDelete < 0 || indexToDelete >= cart.length) {
+          print('Invalid index.');
+          continue;
+        }
+        
+        Stock deletedItem = cart.removeAt(indexToDelete);
+        print('Item deleted from cart: ${deletedItem.name}');
+        
+        break;
+        
+      case '3':
+        displayStock(cart);
+        stdout.write('Enter the item index to update: ');
+        int indexToUpdate = int.parse(stdin.readLineSync()!) - 1;
+        
+        if (indexToUpdate < 0 || indexToUpdate >= cart.length) {
+          print('Invalid index.');
+          continue;
+        }
+        
+        stdout.write('Enter the new quantity: ');
+        int newQuantity = int.parse(stdin.readLineSync()!);
+        
+        Stock updatedItem = cart[indexToUpdate];
+        int diff = newQuantity - updatedItem.quantity;
+        
+        if (diff > stock.where((item) => item.name == updatedItem.name).map((item) => item.quantity).single) {
+          print('Insufficient quantity in stock.');
+          continue;
+        }
+        
+        updatedItem.quantity = newQuantity;
+        stock.firstWhere((item) => item.name == updatedItem.name).quantity -= diff;
+        
+        print('Quantity updated.');
+        
+        break;
+        
+      case '4':
+        cart.clear();
+        print('All items deleted from cart.');
+        break;
+        
+      case '5':
+        double total = 0;
+        print('Invoice:');
+        for (var item in cart) {
+          double itemTotal = item.price * item.quantity;
+          total += itemTotal;
+          print('${item.name} - ${item.price} LKR x ${item.quantity} = ${itemTotal} LKR');
+        }
+        print('Total: ${total} LKR');
+        break;
+        
+      case '6':
+        saveStockToFile(stock, 'stock.json');
+        saveStockToFile(cart, 'cart.json');
+        print('Exiting...');
+        exit(0);
+        
+      default:
+        print('Invalid choice.');
+        break;
+    }
+  }
 }
