@@ -3,10 +3,18 @@ import 'dart:io';
 import 'stock.dart';
 
 void displayStock(List<Stock> stock) {
-  print("Stock -");
+  print("Stock:");
+  print("+-----+----------------------+------------+----------+");
+  print("| ID  | Name                 | Price (LKR)| Quantity |");
+  print("+-----+----------------------+------------+----------+");
   for (int i = 0; i < stock.length; i++) {
-    print('${i + 1} - ${stock[i]}');
+    var id = (i + 1).toString().padRight(4);
+    var name = stock[i].name.padRight(22);
+    var price = 'LKR ${stock[i].price.toStringAsFixed(2)}'.padRight(12);
+    var quantity = stock[i].quantity.toString().padRight(9);
+    print("| $id| $name| $price| $quantity|");
   }
+  print("+-----+----------------------+------------+----------+\n");
 }
 
 void displayCart(List<Stock> cart) {
