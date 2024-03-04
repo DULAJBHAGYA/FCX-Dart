@@ -16,6 +16,13 @@ void displayCart(List<Stock> cart) {
   }
 }
 
+void displayItems(List<Stock> stock) {
+  print("Stock -");
+  for (int i = 0; i < stock.length; i++) {
+    print('${i + 1} - ${stock[i]}');
+  }
+}
+
 List<Stock> loadStockFromFile(String filename) {
   File file = File(filename);
   if (!file.existsSync()) {
@@ -52,8 +59,8 @@ void checkout(List<Stock> cart) {
   String proceed = stdin.readLineSync()!;
   if (proceed.toLowerCase() == 'yes') {
     print('Transaction successful.');
+    print('Cart cleared.');
     cart.clear();
-    saveStockToFile(cart, 'cart.json'); 
   }
 }
 
@@ -88,8 +95,6 @@ void caseFunction(List<Stock> stock, List<Stock> cart) {
             );
             cart.add(cartItem);
             print('Item added to cart.');
-            saveStockToFile(stock, 'stock.json'); 
-            saveStockToFile(cart, 'cart.json'); 
           } else {
             print('Insufficient stock.');
           }
@@ -104,11 +109,7 @@ void caseFunction(List<Stock> stock, List<Stock> cart) {
         int index = int.parse(stdin.readLineSync()!) - 1;
         if (index >= 0 && index < cart.length) {
           Stock deletedItem = cart.removeAt(index);
-          Stock correspondingStockItem = stock.firstWhere((element) => element.name == deletedItem.name);
-          correspondingStockItem.quantity += deletedItem.quantity;
           print('Item deleted from cart: ${deletedItem.name}');
-          saveStockToFile(stock, 'stock.json'); 
-          saveStockToFile(cart, 'cart.json'); 
         } else {
           print('Invalid index.');
         }
@@ -123,19 +124,10 @@ void caseFunction(List<Stock> stock, List<Stock> cart) {
           stdout.write('Enter the new quantity: ');
           int newQuantity = int.parse(stdin.readLineSync()!);
           if (newQuantity <= selectedItem.quantity) {
-            Stock correspondingStockItem = stock.firstWhere((element) => element.name == selectedItem.name);
-            int quantityDifference = newQuantity - selectedItem.quantity;
-            if (correspondingStockItem.quantity >= quantityDifference) {
-              selectedItem.quantity = newQuantity;
-              correspondingStockItem.quantity -= quantityDifference;
-              print('Quantity updated.');
-              saveStockToFile(stock, 'stock.json'); 
-              saveStockToFile(cart, 'cart.json'); 
-            } else {
-              print('Insufficient stock.');
-            }
+            selectedItem.quantity = newQuantity;
+            print('Quantity updated.');
           } else {
-            print('Invalid quantity.');
+            print('Insufficient stock.');
           }
         } else {
           print('Invalid index.');
@@ -143,18 +135,13 @@ void caseFunction(List<Stock> stock, List<Stock> cart) {
         break;
 
       case '4':
-        for (var item in cart) {
-          Stock correspondingStockItem = stock.firstWhere((element) => element.name == item.name);
-          correspondingStockItem.quantity += item.quantity;
-        }
         cart.clear();
         print('All items deleted from cart.');
-        saveStockToFile(stock, 'stock.json'); 
-        saveStockToFile(cart, 'cart.json'); 
         break;
 
       case '5':
-        checkout(cart); 
+        checkout(cart); // Display invoice and proceed with transaction
+               saveStockToFile(stock, 'stock.json'); // Save stock after transaction
         saveStockToFile(cart, 'cart.json');
         break;
 

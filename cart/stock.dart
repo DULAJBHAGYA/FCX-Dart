@@ -56,10 +56,14 @@ void addItem(String itemName, double itemPrice, int itemQuantity, [int? i]) {
 }
 
 void displayItems() {
-  print("Stock -");
+  print("Stock:");
+  print("--------------------------------------------------");
+  print("| ID |   Name              | Price     | Quantity |");
+  print("--------------------------------------------------");
   for (int i = 0; i < stock.length; i++) {
-    print('${i + 1} - ${stock[i]}');
+    print("| ${i + 1}  | ${stock[i].name.padRight(20)} | \lkr${stock[i].price.toStringAsFixed(2).padLeft(8)} | ${stock[i].quantity.toString().padLeft(8)} |");
   }
+  print("--------------------------------------------------");
   executeAction();
 }
 
@@ -101,7 +105,8 @@ void updateItem(int i, String newItem, double newPrice, int newQuantity) {
 
 void saveToFile() {
   File file = File('stock.json');
-  List<Map<String, dynamic>> jsonList = stock.map((item) => item.toJson()).toList();
+  List<Map<String, dynamic>> jsonList =
+      stock.map((item) => item.toJson()).toList();
   String jsonString = json.encode(jsonList);
   file.writeAsStringSync(jsonString);
   print('Stock saved to file.');
@@ -121,7 +126,8 @@ void loadFromFile() {
 }
 
 void executeAction() {
-  stdout.write('Enter action (display/delete/deleteAll/update/add/done/save): ');
+  stdout
+      .write('Enter action (display/delete/deleteAll/update/add/done/save): ');
   String action = stdin.readLineSync()!;
   switch (action.toLowerCase()) {
     case 'display':
@@ -163,7 +169,11 @@ void executeAction() {
   }
 }
 
-void main() {
+void sellerFunctions() {
   loadFromFile();
   executeAction();
+}
+
+void main() {
+  sellerFunctions();
 }
